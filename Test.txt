@@ -1,0 +1,15 @@
+Test for **bold**
+Test for *italic*
+Test for ***bold italic***
+Test for **Mix*ed** wierdly*
+Test for ~~strikethrough__
+Test for __underline__
+Test for @everyone mentions
+Test for __**formatted @everyone mentions**__
+Test for @dev personal mentions
+Test for @d partial mentions autocomplete
+Test for ||obfuscated|| text
+Test for ***__~~||Everything and @everyone||~~__***
+Test for `cRed Colour`
+Test for `11``22``33``44``55``66``77``88``99``aa``bb``cc``dd``ee`
+Test for **`4Formatted` ~~`5colour~~`

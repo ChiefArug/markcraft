@@ -2,7 +2,7 @@ Test for **bold**
 Test for *italic*
 Test for ***bold italic***
 Test for **Mix*ed** wierdly*
-Test for ~~strikethrough__
+Test for ~~strikethrough~~
 Test for __underline__
 Test for @everyone mentions
 Test for __**formatted @everyone mentions**__

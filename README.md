@@ -17,3 +17,6 @@ It also has special support for colouring using backticks (\`). \`cThis text wou
  
 
 \_\_\*\*\~\~\`d\*Everything\*\`\~\~\*\*\_\_ -> __**~~*Everything*~~**__ (but pink)
+
+
+These character sets are also fully configurable!

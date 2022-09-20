@@ -4,7 +4,7 @@ license="MIT"
 issueTrackerURL="https://github.com/ChiefArug/markcraft/issues" #optional
 [[mods]] #mandatory
 modId="markcraft" #mandatory
-version="1.0.0" #mandatory
+version="1.1.0" #mandatory
 displayName="MarkCraft" #mandatory
 displayURL="https://www.curseforge.com/minecraft/mc-mods/markcraft/" #optional
 logoFile="pack.png" #optional

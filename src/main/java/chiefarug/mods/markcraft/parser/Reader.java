@@ -13,28 +13,28 @@ public class Reader {
 	}
 
 	public char current() {
-		return this.text.charAt(this.index);
+		return text.charAt(index);
 	}
 
 	public boolean hasNext() {
-		return (this.index + 1) < this.length;
+		return index + 1 < length;
+	}
+
+	public boolean isLast() {
+		return !hasNext();
+	}
+
+	public void move(int i) {
+		index += i;
 	}
 
 	public char next() {
-		this.index++;
-		return this.current();
+		move(1);
+		return current();
 	}
 
-	public char peekNext() {
-		return this.text.charAt(this.index + 1);
-	}
-
-	public boolean incrementIfNext(char c) {
-		if (this.hasNext() && this.peekNext() == c) {
-			this.next();
-			return true;
-		}
-		return false;
+	public char peek(int i) {
+		return text.charAt(index + i);
 	}
 
 	@Override

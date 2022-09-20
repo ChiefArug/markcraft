@@ -1,5 +1,7 @@
 package chiefarug.mods.markcraft.parser;
 
+import chiefarug.mods.markcraft.Util;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -8,6 +10,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -15,7 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import static chiefarug.mods.markcraft.MarkCraft.LOGGER;
+import static chiefarug.mods.markcraft.config.MarkCraftConfig.*;
 
 public class Parser {
 
@@ -28,11 +31,12 @@ public class Parser {
 	public Style style = Style.EMPTY;
 	public boolean mention = false;
 	@Nullable
-	public ChatFormatting color = null;
+	// null when no color set
+	public TextColor color = null;
 
-	public Parser(MinecraftServer s){
-		server = s;
-	}
+	private static final TextColor DEFAULT_COLOUR = TextColor.fromRgb(0xffffff);
+
+	public Parser(MinecraftServer s) {server = s;}
 
 	public void setText(String text) {
 		message = text;
@@ -79,99 +83,79 @@ public class Parser {
 		textBuffer += c;
 	}
 
+	@SuppressWarnings("SpellCheckingInspection")
 	public void parseCharacter(Reader reader) {
 		char c = reader.next();
 		boolean charConsumed = false;
 
+		// end of mentions (basically any punctuation)
+		if (isMention() && (!Util.isUsernameCharacter(c) || reader.isLast())) {
+			if (reader.isLast() || Util.isUsernameCharacter(c)) {
+				charConsumed = true;
+				addChar(c);
+			}
+			MutableComponent mentionComponent = getMentionComponent(textBuffer);
+			if (mentionComponent == null) {
+				update();
+			} else {
+				update(mentionComponent);
+			}
+
+			mention = false;
+			style = style.withHoverEvent(null).withColor(color);
+			// don't return or add the character so that other processing can still happen
+		}
+
 		// \escape character
-		// Has priority over everything else.
-		if (c == '\\') {
+		// Has priority over everything except the end of a mention (note it will still get processed if used to end a mention as the mention does not return)
+		if (isFormatted(escapeCharacters.get(), reader)) {
 			if (reader.hasNext()) {
 				addChar(reader.next());
 			}
 			return;
 		}
 
-		// end of mentions (basically any punctuation)
-		if (isMention() && (isNonWordCharacter(c) || !reader.hasNext())) {
-			if (!(reader.hasNext() || isNonWordCharacter(c))) {
-				charConsumed = true;
-				addChar(c);
-			}
-
-			if ("@everyone".equals(textBuffer)) {
-				style = style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("everyone")));
-			} else 	if (textBuffer.length() > 1) {
-				MutableComponent playerName = getPlayerNameComponent(textBuffer.substring(1));
-
-				if (playerName != null) {
-					update(playerName);
-				}
-			}
+		// **bold**
+		if (isFormatted(boldCharacters.get(), reader)) {
 			update();
-			mention = false;
-			style = style.withHoverEvent(null).withColor((ChatFormatting) null);
-			// don't return or add the character so that other processing can still happen
+			style = style.withBold(!isBold());
+			return;
 		}
 
-		if (c == '*') {
-			// **bold**
-			if (reader.incrementIfNext('*')) {
-				update();
-				style = style.withBold(!isBold());
-				return;
-			}
-			// *italics*
+		// __underline__
+		if (isFormatted(underlinedCharacters.get(), reader)) {
+			update();
+			style = style.withUnderlined(!isUnderlined());
+			return;
+		}
+
+		// *italics*
+		if (isFormatted(italicCharacters.get(), reader)) {
 			update();
 			style = style.withItalic(!isItalic());
 			return;
 		}
 
 		// ~~strikethrough~~
-		if (c == '~' && reader.incrementIfNext('~')) {
+		if (isFormatted(strikethroughCharacters.get(), reader)) {
 			update();
 			style = style.withStrikethrough(!isStrikethrough());
 			return;
 		}
 
 		// ||obfuscated||
-		if (c == '|' && reader.incrementIfNext('|')) {
+		if (isFormatted(obfuscatedCharacters.get(), reader)) {
 			update();
 			style = style.withObfuscated(!isObfuscated());
 			return;
 		}
 
-		// @players
-		if (c == '@') {
-			update();
-			mention = true;
-			style = style.withColor(MENTION_COLOR);
-			addChar(c);
-			return;
-		}
-
 		// `ccolor`
-		if (c == '`') {
+		if (isFormatted(coloredCharacters.get(), reader)) {
 			update();
 			if (isColored() && reader.hasNext()) {
-				switch (reader.next()) {
-					case '0' -> color = ChatFormatting.BLACK;
-					case '1' -> color = ChatFormatting.DARK_BLUE;
-					case '2' -> color = ChatFormatting.DARK_GREEN;
-					case '3' -> color = ChatFormatting.DARK_AQUA;
-					case '4' -> color = ChatFormatting.DARK_RED;
-					case '5' -> color = ChatFormatting.DARK_PURPLE;
-					case '6' -> color = ChatFormatting.GOLD;
-					case '7' -> color = ChatFormatting.GRAY;
-					case '8' -> color = ChatFormatting.DARK_GRAY;
-					case '9' -> color = ChatFormatting.BLUE;
-					case 'a' -> color = ChatFormatting.GREEN;
-					case 'b' -> color = ChatFormatting.AQUA;
-					case 'c' -> color = ChatFormatting.RED;
-					case 'd' -> color = ChatFormatting.LIGHT_PURPLE;
-					case 'e' -> color = ChatFormatting.YELLOW;
-					default -> color = ChatFormatting.WHITE;
-				}
+				Integer _color = coloringCharacters.get(reader.next());
+				color = _color == null ? DEFAULT_COLOUR : TextColor.fromRgb(_color);
 			} else {
 				color = null;
 			}
@@ -179,10 +163,13 @@ public class Parser {
 			return;
 		}
 
-		// __underline__
-		if (c == '_' && reader.incrementIfNext('_')) {
+		// @players
+		if (isFormatted(mentionCharacters.get(), reader)) {
 			update();
-			style = style.withUnderlined(!isUnderlined());
+			mention = true;
+			// Set the colour here so that it shows up even if the mention is not complete. We can't set the hover component here yet because we do not know the name.
+			style = style.withColor(MENTION_COLOR);
+			addChar(c);
 			return;
 		}
 
@@ -192,31 +179,67 @@ public class Parser {
 		}
 	}
 
-	private boolean isNonWordCharacter(char c) {
-		// special handling of underscores
-		return !(Character.isLetter(c) || Character.isDigit(c) || c == '_');
+	private boolean isFormatted(String formatCharacters, Reader reader) {
+		if (reader.isLast()) {
+			return reader.current() == formatCharacters.charAt(0);
+		}
+		int i = 0;
+		for (;i < formatCharacters.length();i++) {
+			if (reader.hasNext() && reader.peek(i) != formatCharacters.charAt(i)) {
+				return false;
+			}
+		}
+		reader.move(i - 1);
+		return true;
 	}
 
-	private MutableComponent getPlayerNameComponent(String name) {
+	// TODO: Split mentions into their own class to tidy some of this up.
+	private MutableComponent getMentionComponent(String name) {
+		if (getEveryoneMention().equals(name)) {
+			return getEveryoneMentionComponent();
+		} else if (name.length() > 1) {
+			return getPlayerNameHoverComponent(name.substring(mentionCharacters.get().length()));
+		}
+		return null;
+	}
+
+	@NotNull
+	private String getEveryoneMention() {
+		return mentionCharacters.get() + everyoneWord.get();
+	}
+
+	private MutableComponent getPlayerNameHoverComponent(String name) {
 		ServerPlayer serverPlayer = getServerPlayer(name);
 		if (serverPlayer != null) {
-			return nameComponent(serverPlayer.getGameProfile().getName(), serverPlayer.getName().copy(), serverPlayer.getUUID());
+			return nameHoverComponent(serverPlayer.getGameProfile().getName(), serverPlayer.getName().copy(), serverPlayer.getUUID());
 		}
 
-//		GameProfile profile = getPlayerProfile(name);
-//		if (profile != null) {
-//			return nameComponent(profile.getName(), profile.getId());
-//		}
-		return Component.literal('@' + name);
+		if (mentionAnyone.get()) {
+			GameProfile profile = getPlayerProfile(name);
+			if (profile != null) {
+				String username = profile.getName();
+				return nameHoverComponent(username, Component.literal(username) , profile.getId());
+			}
+		}
+		return Component.literal(mentionCharacters.get() + name);
 	}
 
-//	private MutableComponent nameComponent(String username, UUID id) {
-//		return nameComponent(username, Component.literal(username) ,id);
-//	}
+	private MutableComponent getEveryoneMentionComponent() {
+		style = style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, translatableMentions.get() ? Component.translatable("markcraft.mentions.everyone") : Component.literal(everyoneWord.get())));
+		return Component.literal(getEveryoneMention()).withStyle(style);
+	}
 
-	private MutableComponent nameComponent(String username, MutableComponent name, UUID id) {
-		style = style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(username).append(Component.literal('#' + id.toString()).withStyle(ChatFormatting.GRAY))));
-		return Component.literal("@").append(name);
+	private MutableComponent nameHoverComponent(String username, MutableComponent name, UUID id) {
+		MutableComponent hoverComponent;
+		if (translatableMentions.get()) {
+			hoverComponent = Component.translatable("markcraft.mentions.player", username, Component.literal(id.toString()).withStyle(ChatFormatting.GRAY));
+		} else {
+			hoverComponent = Component.literal(username).append(Component.literal('#' + id.toString()).withStyle(ChatFormatting.GRAY));
+		}
+		style = style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverComponent));
+
+
+		return Component.literal(mentionCharacters.get()).append(name);
 
 	}
 
@@ -231,10 +254,11 @@ public class Parser {
 		return null;
 	}
 
-//	@Nullable
-//	private  GameProfile getPlayerProfile(String name) {
-//		return server.getProfileCache().get(name).orElse(null);
-//	}
+	@Nullable
+	private  GameProfile getPlayerProfile(String name) {
+		// TODO: use GameProfileCache#getAsync so the server doesn't freeze
+		return server.getProfileCache().get(name).orElse(null);
+	}
 
 	private boolean isBold() {
 		return style.isBold();

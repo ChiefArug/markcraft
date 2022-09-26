@@ -49,7 +49,7 @@ public class Parser {
 	}
 
 	public Component parse() {
-		Reader reader = new Reader(message);
+		Reader reader = new Reader(Emojis.decorate(message));
 		while (reader.hasNext()) {
 			parseCharacter(reader);
 		}
@@ -185,7 +185,7 @@ public class Parser {
 		}
 		int i = 0;
 		for (;i < formatCharacters.length();i++) {
-			if (reader.hasNext() && reader.peek(i) != formatCharacters.charAt(i)) {
+			if (reader.has(i) && reader.peek(i) != formatCharacters.charAt(i)) {
 				return false;
 			}
 		}

@@ -16,8 +16,12 @@ public class Reader {
 		return text.charAt(index);
 	}
 
+	public boolean has(int i) {
+		return index + i < length;
+	}
+
 	public boolean hasNext() {
-		return index + 1 < length;
+		return has(1);
 	}
 
 	public boolean isLast() {

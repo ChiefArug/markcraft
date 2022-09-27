@@ -31,6 +31,10 @@ public class MarkCraftConfig {
 	public static ForgeConfigSpec.ConfigValue<String> obfuscatedCharacters;
 	public static ForgeConfigSpec.ConfigValue<String> coloredCharacters;
 	public static ForgeConfigSpec.ConfigValue<String> mentionCharacters;
+	private static ForgeConfigSpec.ConfigValue<String> _mentionColor;
+	public static int mentionColor;
+	private static ForgeConfigSpec.ConfigValue<String> _defaultColor;
+	public static int defaultColor;
 
 	private static ForgeConfigSpec.ConfigValue<List<? extends String>> _coloringCharacters;
 	public static final Map<Character, Integer> coloringCharacters = new HashMap<>();
@@ -77,6 +81,11 @@ public class MarkCraftConfig {
 			mentionCharacters = builder.define("mention_characters",  "@");
 		builder.pop();
 
+		builder.comment("The color used for @mentions");
+		_mentionColor = builder.define("mention_color", "6E6EFF", Util::isHexColor);
+		builder.comment("The default color when no color is set using colored_characters and colors.");
+		_defaultColor = builder.define("default_color", "FFFFFF", Util::isHexColor);
+
 		builder.comment("""
 			The characters and colors used along with the colored_characters to color text.
 			Should be in the format c:3f3f3f where c is any character and 3f3f3f is any number in hex format""");
@@ -90,10 +99,9 @@ public class MarkCraftConfig {
 
 		builder.comment("""
 		Emoji's in the format of 🙂:name where 🙂 is the emoji character and name is the emoji name.
-		Note that Minecraft
-		's default font only supports a few emojis and so some emojis that you add may show up as boxes in chat.
-		This can be fixed with a font in a resource pack.
-		Emoji names can contain almost anything except whatever is set as emoji_characters Case is ignored""");
+		Note that Minecraft's default font only supports a few emojis and so some emojis that you add may show up as boxes in chat.
+		This can be fixed with a font in a resource pack that includes these characters.
+		Emoji names can contain almost anything except whatever is set as emoji_characters. Case is ignored""");
 		_emojis = builder.defineList("emojis", Emojis.defaultEmojis(), o ->
 				o instanceof String s &&
 						s.length() > 2 &&
@@ -107,7 +115,7 @@ public class MarkCraftConfig {
 		List<String> colors = new ArrayList<>();
 		for (ChatFormatting format : ChatFormatting.values()) {
 			if (format.isColor()) {
-				colors.add(String.valueOf(format.getChar()) + ':' + Integer.toHexString(format.getColor()));
+				colors.add("" + format.getChar() + ':' + Integer.toHexString(format.getColor()).toUpperCase());
 			}
 		}
 		return colors;
@@ -146,5 +154,8 @@ public class MarkCraftConfig {
 
 			coloringCharacters.put(character, number);
 		}
+
+		mentionColor = Integer.parseInt(_mentionColor.get(), 16);
+		defaultColor = Integer.parseInt(_defaultColor.get(), 16);
 	}
 }

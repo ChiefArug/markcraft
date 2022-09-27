@@ -17,4 +17,16 @@ public class Util {
 		}
 		return true;
 	}
+
+	public static boolean isHexColor(Object o ) {
+		if (o instanceof String s) {
+			try {
+				int i = Integer.parseInt(s, 16);
+				return i <= 0xffffff;
+			} catch (NumberFormatException ex) {
+				return false;
+			}
+		}
+		return false;
+	}
 }

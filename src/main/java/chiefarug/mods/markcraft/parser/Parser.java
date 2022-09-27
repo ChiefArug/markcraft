@@ -22,19 +22,15 @@ import static chiefarug.mods.markcraft.config.MarkCraftConfig.*;
 
 public class Parser {
 
-	public static final TextColor MENTION_COLOR = TextColor.fromRgb(7237375);
-
 	public String message;
 	public final List<Component> parsed = new ArrayList<>();
 	public final MinecraftServer server;
 	public String textBuffer = "";
-	public Style style = Style.EMPTY;
+	public Style style = Style.EMPTY.withColor(defaultColor);
 	public boolean mention = false;
 	@Nullable
 	// null when no color set
 	public TextColor color = null;
-
-	private static final TextColor DEFAULT_COLOUR = TextColor.fromRgb(0xffffff);
 
 	public Parser(MinecraftServer s) {server = s;}
 
@@ -43,7 +39,7 @@ public class Parser {
 
 		parsed.clear();
 		textBuffer = "";
-		style = Style.EMPTY;
+		style = Style.EMPTY.withColor(defaultColor);
 		mention = false;
 		color = null;
 	}
@@ -155,7 +151,7 @@ public class Parser {
 			update();
 			if (isColored() && reader.hasNext()) {
 				Integer _color = coloringCharacters.get(reader.next());
-				color = _color == null ? DEFAULT_COLOUR : TextColor.fromRgb(_color);
+				color = _color == null ? TextColor.fromRgb(defaultColor) : TextColor.fromRgb(_color);
 			} else {
 				color = null;
 			}
@@ -168,7 +164,10 @@ public class Parser {
 			update();
 			mention = true;
 			// Set the colour here so that it shows up even if the mention is not complete. We can't set the hover component here yet because we do not know the name.
-			style = style.withColor(MENTION_COLOR);
+			// We could resolve the name here though, because all the characters after this till a character that ends the mention will be part of the name
+			// That would also minisculy improve performance because we don't do a bunch of unnescary format character checks.
+			// TODO: Make this use a 'lookahead' system and do all logic here, instead of checking seperately for the end. (L#88)
+			style = style.withColor(mentionColor);
 			addChar(c);
 			return;
 		}
@@ -255,7 +254,7 @@ public class Parser {
 	}
 
 	@Nullable
-	private  GameProfile getPlayerProfile(String name) {
+	private GameProfile getPlayerProfile(String name) {
 		// TODO: use GameProfileCache#getAsync so the server doesn't freeze
 		return server.getProfileCache().get(name).orElse(null);
 	}

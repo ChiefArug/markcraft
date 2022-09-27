@@ -4,7 +4,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.1.+'
 }
 
-version = '1.1.0'
+version = '1.2.0'
 group = 'chiefarug.mods.markcraft'// http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'markcraft'
 
@@ -101,7 +101,7 @@ jar {
         attributes([
                 "Specification-Title"     : "markcraft",
                 "Specification-Vendor"    : "ChiefArug",
-                "Specification-Version"   : "1.1.0", // We are version 1 of ourselves
+                "Specification-Version"   : "1.2.0", // We are version 1 of ourselves
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
                 "Implementation-Vendor"   : "ChiefArug",

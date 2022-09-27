@@ -3,6 +3,7 @@ package chiefarug.mods.markcraft.config;
 import chiefarug.mods.markcraft.Util;
 import chiefarug.mods.markcraft.parser.Emojis;
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.TextColor;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartedEvent;
@@ -32,12 +33,12 @@ public class MarkCraftConfig {
 	public static ForgeConfigSpec.ConfigValue<String> coloredCharacters;
 	public static ForgeConfigSpec.ConfigValue<String> mentionCharacters;
 	private static ForgeConfigSpec.ConfigValue<String> _mentionColor;
-	public static int mentionColor;
+	public static TextColor mentionColor;
 	private static ForgeConfigSpec.ConfigValue<String> _defaultColor;
-	public static int defaultColor;
+	public static TextColor defaultColor;
 
 	private static ForgeConfigSpec.ConfigValue<List<? extends String>> _coloringCharacters;
-	public static final Map<Character, Integer> coloringCharacters = new HashMap<>();
+	public static final Map<Character, TextColor> coloringCharacters = new HashMap<>();
 
 	private static ForgeConfigSpec.ConfigValue<List<? extends String>> _emojis;
 	public static final Map<String, String> emojis = new HashMap<>();
@@ -152,10 +153,10 @@ public class MarkCraftConfig {
 			char character = colorPair.charAt(0);
 			int number = Integer.parseInt(colorPair.substring(2), 16);
 
-			coloringCharacters.put(character, number);
+			coloringCharacters.put(character, TextColor.fromRgb(number));
 		}
 
-		mentionColor = Integer.parseInt(_mentionColor.get(), 16);
-		defaultColor = Integer.parseInt(_defaultColor.get(), 16);
+		mentionColor = TextColor.fromRgb(Integer.parseInt(_mentionColor.get(), 16));
+		defaultColor = TextColor.fromRgb(Integer.parseInt(_defaultColor.get(), 16));
 	}
 }

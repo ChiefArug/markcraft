@@ -98,7 +98,7 @@ public class Parser {
 			}
 
 			mention = false;
-			style = style.withHoverEvent(null).withColor(color);
+			style = style.withHoverEvent(null).withColor(color != null ? color : defaultColor);
 			// don't return or add the character so that other processing can still happen
 		}
 
@@ -150,12 +150,12 @@ public class Parser {
 		if (isFormatted(coloredCharacters.get(), reader)) {
 			update();
 			if (isColored() && reader.hasNext()) {
-				Integer _color = coloringCharacters.get(reader.next());
-				color = _color == null ? TextColor.fromRgb(defaultColor) : TextColor.fromRgb(_color);
+				TextColor _color = coloringCharacters.get(reader.next());
+				color = _color == null ? defaultColor : _color;
 			} else {
 				color = null;
 			}
-			style = style.withColor(color);
+			style = style.withColor(color != null ? color : defaultColor);
 			return;
 		}
 

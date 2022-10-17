@@ -1,6 +1,7 @@
 package chiefarug.mods.markcraft;
 
 import chiefarug.mods.markcraft.parser.Parser;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -11,22 +12,25 @@ import static chiefarug.mods.markcraft.MarkCraft.MODID;
 @Mod.EventBusSubscriber(modid = MODID)
 public class DecorateChatEvent {
 
-	public static Parser parser;
+	public static Parser PARSER;
 
 	// We don't use the preview specific event because clients with preview off would not be able to use markdown.
 	@SubscribeEvent
-	public static void onChatReceived(ServerChatEvent event) {
+	static void onChatReceived(ServerChatEvent event) {
 		if (event.canChangeMessage()) {
 			String message = event.getRawText();
 
-			if (parser == null) {
+			if (PARSER == null) {
 				LGGR.info("First message received. MarkCraft is go!");
-				parser = new Parser(event.getPlayer().getServer());
+				PARSER = new Parser(event.getPlayer().getServer());
 			}
-			parser.setText(message);
-
-			event.setMessage(parser.parse());
+			event.setMessage(decorateMessage(message, PARSER));
 		}
+	}
+
+	public static Component decorateMessage(String message, Parser parser) {
+		parser.setText(message);
+		return parser.parse();
 	}
 
 	private DecorateChatEvent(){}

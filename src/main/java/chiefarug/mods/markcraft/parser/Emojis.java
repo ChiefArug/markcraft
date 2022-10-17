@@ -18,6 +18,7 @@ public class Emojis {
 		int lastEmojiEnd = -1;
 
 		while (hasEmojiLeft) {
+			// TODO: Move this into another method for readability
 			int startIndex = buffer.indexOf(emojiCharacters.get(), lastEmojiEnd + 1) + 1;
 			if (startIndex == 0) return buffer.toString();
 			// add 1 here again because minimum emoji length is 1

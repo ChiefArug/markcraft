@@ -22,15 +22,15 @@ import static chiefarug.mods.markcraft.config.MarkCraftConfig.*;
 
 public class Parser {
 
-	public String message;
-	public final List<Component> parsed = new ArrayList<>();
-	public final MinecraftServer server;
-	public String textBuffer = "";
-	public Style style = Style.EMPTY.withColor(defaultColor);
-	public boolean mention = false;
+	private String message;
+	private final List<Component> parsed = new ArrayList<>();
+	private final MinecraftServer server;
+	private String textBuffer = "";
+	private Style style = Style.EMPTY.withColor(defaultColor);
+	private boolean mention = false;
 	@Nullable
 	// null when no color set
-	public TextColor color = null;
+	private TextColor color = null;
 
 	public Parser(MinecraftServer s) {server = s;}
 
@@ -63,24 +63,24 @@ public class Parser {
 		return component;
 	}
 
-	public void update() {
+	private void update() {
 		if (!textBuffer.isEmpty()) {
 			update(Component.literal(textBuffer));
 		}
 	}
 
-	public void update(MutableComponent base) {
+	private void update(MutableComponent base) {
 		textBuffer = "";
 		MutableComponent t = base.withStyle(style);
 		parsed.add(t);
 	}
 
-	public void addChar(char c) {
+	private void addChar(char c) {
 		textBuffer += c;
 	}
 
 	@SuppressWarnings("SpellCheckingInspection")
-	public void parseCharacter(Reader reader) {
+	private void parseCharacter(Reader reader) {
 		char c = reader.next();
 		boolean charConsumed = false;
 
